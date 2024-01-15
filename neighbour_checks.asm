@@ -1,8 +1,7 @@
 neighbour_checks:
-	; jmp _end
 ;	remove edge cases from main loop
-	or di, di
-	jz .left_edge
+	or di, di												;
+	jz .left_edge											;
 	
 	cmp di, frame_width - 1
 	je .right_edge
@@ -51,25 +50,28 @@ neighbour_checks:
 	inc si
 	
 .change_state:
-	mov al, [neighbour_count]		; 0 to 8
-	mov ah, [current_coord_state]	; 0 or 1
-	or ah, ah
+	call get_bit_state	; al -> bit state
+	mov ah, [neighbour_count]
+	
+	or al, al
 	jz .dead
 
 .alive:
-	or al, ah
-	cmp al, 3
+	or ah, al
+	cmp ah, 3
 	je .end
 
 .toggle:
-	xor bx, bx								;
-	mov es, bx								;
+	push es
+	mov es, bx	; es -> 0
 	mov bx, grid_address
 	call toggle_pixel_state
+	pop es
+	xor bx, bx
 	jmp .end
 	
 .dead:
-	cmp al, 3
+	cmp ah, 3
 	je .toggle
 
 .end:
@@ -89,6 +91,7 @@ neighbour_checks:
 	jz .top_right_corner
 	cmp si, frame_height - 1
 	je .bottom_right_corner
+	jmp .right_edge_only
 
 ;	corners and edges only
 .left_edge_only:	; i.e. without x-1, x-1 y-1, x-1 y+1
