@@ -10,8 +10,9 @@ jmp start
 
 ; BOOT_DRIVE					db 0
 video_memory_address		equ 0xA000
-; neighbour_checks_address 	equ 0x7e00
 grid_address				equ 0x8000
+grid_sectors				equ 16
+
 frame_width					equ 320	; value should be divisible by 16
 frame_height				equ 200	; grid starts from top left (0,0)
 
@@ -31,13 +32,13 @@ start:
 	; mov [BOOT_DRIVE], dl
 
 	mov ah, 0x02	; read data to memory
-	mov al, 16		; no. of sectors
+	mov al, grid_sectors;		; no. of sectors
 	mov ch, 0;65		; cylinder_count 
 	mov cl, 2;37		; sector in head
 	mov dh, 0;101		; head_count
 	; mov dl, [BOOT_DRIVE]
-	xor bx, bx
-	mov es, bx
+	; xor bx, bx
+	; mov es, bx
 	mov bx, grid_address
 	int 0x13
 	
@@ -52,15 +53,9 @@ start:
 ;========================================================================
 game_setup:
 ; exit on user input
-	mov ah, 1
-	int 0x16
-	jnz _end
-
-;	load grid state from grid.asm							; REMOVE	
-	; xor di, di
-	; mov si, grid_address
-	; mov cx, frame_height * frame_width / 8
-	; rep movsb	; mov ds:si to es:di , inc di, inc si, repeat cx times
+	; mov ah, 1
+	; int 0x16
+	; jnz _end
 
 	xor di, di
 	xor si, si
@@ -143,20 +138,6 @@ _end:
 	cli
 	hlt
 ;========================================================================
-; setup_graphics_mode:		
-	; ; change bios video mode to graphics 320x200 colour
-	; mov ah, 0
-	; mov al, 0x0d
-	; int 0x10
-	
-	; ; set background colour - 16 bit
-	; ; black, blue, green, cyan, red, magenta, orange, l grey, d grey, l blue, l green, l cyan, l red, pink, yellow, white
-	; mov ah, 0x0b
-	; mov bh, 0
-	; mov bl, 0 ; black
-	; int 0x10
-	; ret
-
 ; cx as input
 ; delay:									; NOT USED
 	; mov ah, 0x86
@@ -196,8 +177,8 @@ dw 0xAA55
 
 ; neighbour_checks_start:
 ; %include "neighbour_checks.asm"
-; times 512*2-($-neighbour_checks_start) db 0
+; times 512*2-($-neighbour_checks_start) db 0; 
 
 grid_start:
 %include "grid.asm"
-times 512*16-($-grid_start) db 0
+times 512*grid_sectors-($-grid_start) db 0
