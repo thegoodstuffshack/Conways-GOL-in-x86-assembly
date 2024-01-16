@@ -1,8 +1,5 @@
 neighbour_checks:
 ;	remove edge cases from main loop
-	or di, di												;
-	jz .left_edge											;
-	
 	cmp di, frame_width - 1
 	je .right_edge
 	
@@ -16,62 +13,53 @@ neighbour_checks:
 .center_cases:
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	inc si
 	
-.change_state:
+.change_state:	; bl is neighbour count
+	mov bh, bl
 	call get_bit_state	; al -> bit state
-	mov ah, [neighbour_count]
-	
+	mov bl, bh
 	or al, al
 	jz .dead
 
 .alive:
-	or ah, al
-	cmp ah, 3
+	or bl, 1
+	cmp bl, 3
 	je .end
 
 .toggle:
-	push es
-	mov es, bx	; es -> 0
-	mov bx, grid_address
+	xor ax, ax
+	mov es, ax
 	call toggle_pixel_state
-	pop es
-	xor bx, bx
+	mov ax, video_memory_address
+	mov es, ax
 	jmp .end
 	
 .dead:
-	cmp ah, 3
+	cmp bl, 3
 	je .toggle
 
 .end:
@@ -97,23 +85,18 @@ neighbour_checks:
 .left_edge_only:	; i.e. without x-1, x-1 y-1, x-1 y+1
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	jmp .change_state
@@ -121,71 +104,59 @@ neighbour_checks:
 .right_edge_only:	; i.e. without x+1, x+1 y-1, x+1 y+1
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	jmp .change_state
 
 .top_edge_only:
+	or di, di
+	jz .top_left_corner
+
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 
 	dec di
 	call get_bit_state
-	add [neighbour_count], al	
+		
+	dec di
+	call get_bit_state
 	
-	dec di
-	call get_bit_state
-	add [neighbour_count], al	
-
 	dec si
 	call get_bit_state
-	add [neighbour_count], al	
-	
+		
 	inc di
 	jmp .change_state
 
 .bottom_edge_only:
 	dec di
 	call get_bit_state
-	add [neighbour_count], al	
-	
+
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	jmp .change_state
@@ -193,15 +164,12 @@ neighbour_checks:
 .top_left_corner:
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di 
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	jmp .change_state
@@ -209,15 +177,12 @@ neighbour_checks:
 .top_right_corner:
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	jmp .change_state
@@ -225,15 +190,12 @@ neighbour_checks:
 .bottom_left_corner:
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	jmp .change_state
@@ -241,15 +203,12 @@ neighbour_checks:
 .bottom_right_corner:
 	dec di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	dec si
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc di
 	call get_bit_state
-	add [neighbour_count], al
 	
 	inc si
 	jmp .change_state
