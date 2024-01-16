@@ -51,11 +51,24 @@ neighbour_checks:
 	je .end
 
 .toggle:
-	xor ax, ax
-	mov es, ax
-	call toggle_pixel_state
-	mov ax, video_memory_address
-	mov es, ax
+	mov dx, di
+	;	math for finding bit in the byte - could use lookup table
+	and di, 0x0007 ; 0000 0000 0000 0111
+	mov cx, di	; store remainder
+	mov di, dx
+	mov ch, 0b10000000	; 
+	shr ch, cl			; use remainder to find bit pos in byte
+
+	shr di, 3		; from bit to byte value div 8
+;	multiply si by 40
+	lea ax, [esi*4+esi] ; si * (1,2,3,4,5,8,9)
+	lea ax, [eax*8]		; si * 8
+	add di, ax
+
+	mov al, [di+grid_address]	; get byte
+	xor al, ch	; toggle bit
+	mov [di+grid_address], al
+	mov di, dx
 	jmp .end
 	
 .dead:
@@ -121,9 +134,6 @@ neighbour_checks:
 	jmp .change_state
 
 .top_edge_only:
-	or di, di
-	jz .top_left_corner
-
 	inc di
 	call get_bit_state
 
